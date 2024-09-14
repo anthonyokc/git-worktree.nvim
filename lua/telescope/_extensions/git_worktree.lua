@@ -83,29 +83,9 @@ local delete_worktree = function(prompt_bufnr)
     end
 end
 
-local create_input_prompt = function(cb)
-
-    --[[
-    local window = Window.centered({
-        width = 30,
-        height = 1
-    })
-    vim.api.nvim_buf_set_option(window.bufnr, "buftype", "prompt")
-    vim.fn.prompt_setprompt(window.bufnr, "Worktree Location: ")
-    vim.fn.prompt_setcallback(window.bufnr, function(text)
-        vim.api.nvim_win_close(window.win_id, true)
-        vim.api.nvim_buf_delete(window.bufnr, {force = true})
-        cb(text)
-    end)
-
-    vim.api.nvim_set_current_win(window.win_id)
-    vim.fn.schedule(function()
-        vim.nvim_command("startinsert")
-    end)
-    --]]
-    --
-
-    local subtree = vim.fn.input("Path to subtree > ")
+local create_input_prompt = function(cb, name, prefix)
+    prefix = prefix or ''
+    local subtree = vim.fn.input('Path to new worktree > ', prefix .. name)
     cb(subtree)
 end
 
@@ -122,6 +102,8 @@ local create_worktree = function(opts)
                 local branch = selected_entry ~= nil and
                     selected_entry.value or current_line
 
+                branch = branch:gsub("^origin/", "")
+
                 if branch == nil then
                     return
                 end
@@ -131,7 +113,7 @@ local create_worktree = function(opts)
                         name = branch
                     end
                     git_worktree.create_worktree(name, branch)
-                end)
+                end, branch, opts.prefix)
             end)
 
         -- do we need to replace other default maps?
